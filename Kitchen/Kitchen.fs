@@ -8,27 +8,27 @@ open Sharpino.Definitions
 open FSharpPlus
 open FsToolkit.ErrorHandling
 module Kitchen =
-    type Kitchen(digheRefs: List<Guid>) =
+    type Kitchen(dishRefs: List<Guid>) =
         let stateId = Guid.NewGuid()
 
         member this.StateId = stateId
-        member this.DigheRefs = digheRefs
+        member this.DishRefs = dishRefs
         member this.AddDishRef (digheRef: Guid) =
             result {
                 do! 
-                    this.DigheRefs 
+                    this.DishRefs 
                     |> List.contains digheRef
                     |> not
                     |> Result.ofBool "DigheRef already exists"
-                return Kitchen (digheRef :: digheRefs)
+                return Kitchen (digheRef :: dishRefs)
             }
-        member this.RemoveDishRef (digheRef: Guid) =
+        member this.RemoveDishRef (dishRef: Guid) =
             result {
                 do! 
-                    this.DigheRefs 
-                    |> List.contains digheRef
+                    this.DishRefs 
+                    |> List.contains dishRef
                     |> Result.ofBool "DigheRef does not exist"
-                return Kitchen (this.DigheRefs |> List.filter ((<>) digheRef))
+                return Kitchen (this.DishRefs |> List.filter ((<>) dishRef))
             }
 
         static member Zero = Kitchen([])

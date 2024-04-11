@@ -32,7 +32,7 @@ module PubSystem =
         member this.GetDishReferences() =   
             result {
                 let! (_, state,_, _) = kitchenStateViewer()
-                return state.DigheRefs
+                return state.DishRefs
             }
         member this.AddDish (dish: Dish) =
             result {
