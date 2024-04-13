@@ -13,6 +13,7 @@
     <Compile Include="Kitchen/Commands.fs" />
     <Compile Include="Dishes/Dishes.fs" />
     <Compile Include="Dishes/Events.fs" />
+    <Compile Include="Dishes/Commands.fs" />
     <Compile Include="PubSystem.fs" />
     <Compile Include="Sample.fs" />
     <Compile Include="Main.fs" />

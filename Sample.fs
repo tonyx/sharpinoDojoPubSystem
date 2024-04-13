@@ -13,21 +13,50 @@ open FSharpPlus
 open FsToolkit.ErrorHandling
 open PubSystem.PubSystem
 open PubSystem.Dishes
+open Sharpino.PgStorage
+open Sharpino.EventStore
+open Sharpino
+open Sharpino.MemoryStorage
+open Sharpino.Storage
+open Sharpino.TestUtils
 
+
+let connection =
+    "Server=127.0.0.1;" +
+    "Database=es_orderssystem2;" +
+    "User Id=safe;"+
+    "Password=safe;"
+
+// let pgEventStore = PgEventStore(connection)
+let memoryEventStore:IEventStore = MemoryStorage()
+let pgEventStore:IEventStore = PgEventStore(connection)
+
+let setUp (eventStore: IEventStore) =
+    eventStore.Reset Kitchen.Version Kitchen.StorageName
+    eventStore.ResetAggregateStream Dish.Version Dish.StorageName
+
+let pubSystems =
+    [
+        PubSystem(memoryEventStore), memoryEventStore, "questo e' basato sulla memoria"
+        // PubSystem(pgEventStore), pgEventStore, "questo e' il test basto su postgres"
+    ]
 
 [<Tests>]
 let tests =
   testList "samples" [
+    multipleTestCase "initial state pub system has zero dish references - OK " pubSystems <| fun (pubSystem, eventStore, msg) ->
+        setUp eventStore
 
-    testCase "initial state pub system has zero dish references - OK " <| fun _ ->
-        let pubSystem = PubSystem()  
+        printf "%s\n" msg
         let dishRefs = pubSystem.GetDishReferences()
         Expect.isOk dishRefs "should be ok"
         let dishes = dishRefs.OkValue
         Expect.equal dishes.Length 0 "should be empty"
 
-    testCase "initial state pub system, add a new dish - Ok" <| fun _ ->
-        let pubSystem = PubSystem()
+    multipleTestCase "initial state pub system, add a new dish - Ok" pubSystems <| fun (pubSystem, eventStore, msg) ->
+        setUp eventStore
+
+        printf "%s\n" msg
         let dishGuid = Guid.NewGuid()
         let dish = Dish(dishGuid, "dish1", [DishTypes.Main])
         let dishAdded = pubSystem.AddDish(dish)
@@ -35,8 +64,10 @@ let tests =
         let dishes = pubSystem.GetDishReferences().OkValue
         Expect.equal dishes.Length 1 "should have one dish"
 
-    testCase "initial state pub system, add a dish and retrieve it" <| fun _ ->
-        let pubSystem = PubSystem()
+    multipleTestCase "initial state pub system, add a dish and retrieve it" pubSystems <| fun (pubSystem, eventStore, msg) ->
+        setUp eventStore
+
+        printf "%s\n" msg
         let dishGuid = Guid.NewGuid()
         let dish = Dish(dishGuid, "dish1", [DishTypes.Main])
         let dishAdded = pubSystem.AddDish(dish)

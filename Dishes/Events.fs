@@ -13,11 +13,15 @@ open FsToolkit.ErrorHandling
 
 module DishEvents =
     type DishEvents =
-        | AddDishType of DishTypes
+        | DishTypeAdded of DishTypes
+        | DishTypeRemoved of DishTypes
+        | NameUpdated of string
             interface Event<Dish> with
                 member this.Process (dish: Dish) =
                     match this with
-                    | AddDishType dishType -> dish.AddDishType dishType
+                    | DishTypeAdded dishType -> dish.AddDishType dishType
+                    | DishTypeRemoved dishType -> dish.RemoveDishType dishType
+                    | NameUpdated newName -> dish.UpdateName newName
             static member Deserialize (serializer: ISerializer, json: Json): Result<DishEvents, string>  =
                 serializer.Deserialize<DishEvents> json
             member this.Serialize (serializer: ISerializer) =
