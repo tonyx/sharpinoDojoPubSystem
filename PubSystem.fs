@@ -39,13 +39,15 @@ module PubSystem =
         member this.AddDish (dish: Dish) =
             result {
                 return! 
-                    (AddDishRef dish.Id)
+                    dish.Id
+                    |> AddDishRef
                     |> runInitAndCommand<Kitchen, KitchenEvents, Dish> storage doNothingBroker kitchenStateViewer dish
             }
         member this.UpdateDishName (dishId: Guid, newName: string) =
             result {
                 return! 
-                    (UpdateName newName)
+                    newName
+                    |> UpdateName
                     |> runAggregateCommand<Dish, DishEvents> dishId storage doNothingBroker dishStateViewer
             }
 
