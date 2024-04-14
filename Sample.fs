@@ -77,5 +77,21 @@ let tests =
         Expect.isOk retrievedDish "should be ok"
         Expect.equal retrievedDish.OkValue.Id dishGuid "should be the same dish"
         Expect.equal retrievedDish.OkValue.Name "dish1" "should have the same name"
+
+    multipleTestCase "update dish name" pubSystems <| fun (pubSystem, eventStore, msg) ->
+        setUp eventStore
+
+        printf "%s\n" msg
+        let dishGuid = Guid.NewGuid()
+        let dish = Dish(dishGuid, "dish1", [DishTypes.Main])
+        let dishAdded = pubSystem.AddDish(dish)
+        Expect.isOk dishAdded "should be ok"
+
+        let updatedDish = pubSystem.UpdateDishName(dishGuid, "dish2")
+        Expect.isOk updatedDish "should be ok"
+        let retrievedDish = pubSystem.GetDish dishGuid
+        Expect.isOk retrievedDish "should be ok"
+        Expect.equal retrievedDish.OkValue.Name "dish2" "should have the updated name"
+
   ]
   |> testSequenced

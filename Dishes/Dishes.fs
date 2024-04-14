@@ -48,10 +48,10 @@ module Dishes =
                 do! 
                     newName
                     |> String.IsNullOrWhiteSpace
+                    |> not
                     |> Result.ofBool "Name cannot be empty"
                 return Dish (id, newName, dishTypes)
             }
-        
 
         member this.Serialize (serializer: ISerializer) =
             this
