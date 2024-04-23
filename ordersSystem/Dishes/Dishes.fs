@@ -3,13 +3,16 @@ namespace PubSystem
 open System
 open Sharpino
 open Sharpino.Core
+open Sharpino.Lib.Core.Commons
 open Sharpino.Utils
 open Sharpino.Result
 open Sharpino.Definitions
 open FSharpPlus
+open MBrace.FsPickler.Json
 open FsToolkit.ErrorHandling
+open MBrace.FsPickler.Combinators
+
 module Dishes =
-    open Sharpino.Lib.Core.Commons
     type DishTypes =
         | Starter
         | Main
@@ -40,6 +43,10 @@ module Dishes =
                     this.DishTypes 
                     |> List.contains dishType
                     |> Result.ofBool "DishType does not exist"
+                do! 
+                    this.DishTypes 
+                    |> List.length > 1
+                    |> Result.ofBool "Dish must have at least one type"
                 return Dish (id, name, dishTypes |> List.filter ((<>) dishType))
             }
 

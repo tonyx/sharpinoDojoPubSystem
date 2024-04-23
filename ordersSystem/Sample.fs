@@ -59,8 +59,8 @@ let tests =
         setUp eventStore
 
         let dishGuid = Guid.NewGuid()
-        let dish = Dish(dishGuid, "dish1", [DishTypes.Main])
-        let dishAdded = pubSystem.AddDish(dish)
+        let dish = Dish (dishGuid, "dish1", [DishTypes.Main])
+        let dishAdded = pubSystem.AddDish dish
         Expect.isOk dishAdded "should be ok"
         let dishes = pubSystem.GetDishReferences().OkValue
         Expect.equal dishes.Length 1 "should have one dish"
@@ -83,10 +83,10 @@ let tests =
 
         let dishGuid = Guid.NewGuid()
         let dish = Dish(dishGuid, "dish1", [DishTypes.Main])
-        let dishAdded = pubSystem.AddDish(dish)
+        let dishAdded = pubSystem.AddDish dish
         Expect.isOk dishAdded "should be ok"
 
-        let updatedDish = pubSystem.UpdateDishName(dishGuid, "dish2")
+        let updatedDish = pubSystem.UpdateDishName (dishGuid, "dish2")
         Expect.isOk updatedDish "should be ok"
         let retrievedDish = pubSystem.GetDish dishGuid
         Expect.isOk retrievedDish "should be ok"
@@ -100,8 +100,8 @@ let tests =
         let dish1 = Dish(dishGuid1, "dish1", [DishTypes.Main])
         let dish2 = Dish(dishGuid2, "dish2", [DishTypes.Main])
 
-        let dishAdded1 = pubSystem.AddDish(dish1)
-        let dishAdded2 = pubSystem.AddDish(dish2)
+        let dishAdded1 = pubSystem.AddDish dish1
+        let dishAdded2 = pubSystem.AddDish dish2
 
         let retrieveRefs = pubSystem.GetDishReferences()
         Expect.equal retrieveRefs.OkValue.Length 2 "should have two dishes"
@@ -163,7 +163,7 @@ let tests =
         let dishguid = Guid.NewGuid()
         let dish = Dish(dishguid, "dish1", [DishTypes.Main])
 
-        let dishAdded = pubSystem.AddDish dish)
+        let dishAdded = pubSystem.AddDish dish
         Expect.isOk dishAdded "should be ok"
 
         let typeRemoved = pubSystem.RemoveTypeFromDish(dishguid, DishTypes.Main)
@@ -174,7 +174,7 @@ let tests =
 
         let ingredientGuid = Guid.NewGuid()
         let ingredient = Ingredient(ingredientGuid, "ingredient1", [IngredientTypes.Dairy], [IngredientMeasures.Grams])
-        let ingredientAdded = pubSystem.AddIngredient ingredient
+        let ingredientAdded = pubSystem.AddIngredient(ingredient)
         Expect.isOk ingredientAdded "should be ok"
 
         let retrievedIngredient = pubSystem.GetIngredient ingredientGuid
@@ -190,7 +190,7 @@ let tests =
 
         let ingredientGuid = Guid.NewGuid()
         let ingredient = Ingredient(ingredientGuid, "ingredient1", [IngredientTypes.Dairy], [IngredientMeasures.Grams])
-        let ingredientAdded = pubSystem.AddIngredient(ingredient)
+        let ingredientAdded = pubSystem.AddIngredient ingredient
         Expect.isOk ingredientAdded "should be ok"
 
         let updatedIngredient = pubSystem.AddTypeToIngredient(ingredientGuid, IngredientTypes.Fish)

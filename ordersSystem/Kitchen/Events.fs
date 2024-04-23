@@ -13,6 +13,8 @@ module KitchenEvents =
     type KitchenEvents =
         | DishRefAdded of Guid
         | DishRefRemoved of Guid
+        | IngredientRefAdded of Guid
+        | IngredientRefRemoved of Guid
 
             interface Event<Kitchen> with
                 member this.Process (kitchen: Kitchen) =
@@ -21,6 +23,10 @@ module KitchenEvents =
                         kitchen.AddDishRef digheRef
                     | DishRefRemoved digheRef -> 
                         kitchen.RemoveDishRef digheRef
+                    | IngredientRefAdded ingredientRef ->
+                        kitchen.AddIngredientRef ingredientRef
+                    | IngredientRefRemoved ingredientRef ->
+                        kitchen.RemoveIngredientRef ingredientRef
             static member Deserialize (serializer: ISerializer, json: Json): Result<KitchenEvents, string>  =
                 serializer.Deserialize<KitchenEvents> json
             member this.Serialize (serializer: ISerializer) =

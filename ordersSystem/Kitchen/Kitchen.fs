@@ -6,13 +6,15 @@ open Sharpino.Utils
 open Sharpino.Result
 open Sharpino.Definitions
 open FSharpPlus
+open MBrace.FsPickler.Json
 open FsToolkit.ErrorHandling
 module Kitchen =
-    type Kitchen(dishRefs: List<Guid>) =
+    type Kitchen(dishRefs: List<Guid>, ingredientRefs: List<Guid> ) =
         let stateId = Guid.NewGuid()
 
         member this.StateId = stateId
         member this.DishRefs = dishRefs
+        member this.IngredientRefs = ingredientRefs
         member this.AddDishRef (digheRef: Guid) =
             result {
                 do! 
@@ -20,7 +22,7 @@ module Kitchen =
                     |> List.contains digheRef
                     |> not
                     |> Result.ofBool "DigheRef already exists"
-                return Kitchen (digheRef :: dishRefs)
+                return Kitchen (digheRef :: dishRefs, ingredientRefs)
             }
         member this.RemoveDishRef (dishRef: Guid) =
             result {
@@ -28,10 +30,30 @@ module Kitchen =
                     this.DishRefs 
                     |> List.contains dishRef
                     |> Result.ofBool "DigheRef does not exist"
-                return Kitchen (this.DishRefs |> List.filter ((<>) dishRef))
+                return Kitchen (this.DishRefs |> List.filter ((<>) dishRef), ingredientRefs)
+            }
+        member this.AddIngredientRef (ingredientRef: Guid) =
+            result {
+                do! 
+                    this.IngredientRefs 
+                    |> List.contains ingredientRef
+                    |> not
+                    |> Result.ofBool "IngredientRef already exists"
+                return Kitchen (dishRefs, ingredientRef :: ingredientRefs)
+            }
+        member this.RemoveIngredientRef (ingredientRef: Guid) =
+            result {
+                do! 
+                    this.IngredientRefs 
+                    |> List.contains ingredientRef
+                    |> Result.ofBool "IngredientRef does not exist"
+                return Kitchen (dishRefs, this.IngredientRefs |> List.filter ((<>) ingredientRef))
             }
 
-        static member Zero = Kitchen([])
+        member this.GetDishRefs() =
+            this.DishRefs
+
+        static member Zero = Kitchen([], [])
 
         static member StorageName =
             "_kitchen"
