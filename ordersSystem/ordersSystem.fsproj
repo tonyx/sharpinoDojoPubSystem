@@ -18,7 +18,7 @@
     <Compile Include="Dishes/Events.fs" />
     <Compile Include="Dishes/Commands.fs" />
     <Compile Include="PubSystem.fs" />
-    <Compile Include="Sample.fs" />
+    <Compile Include="Tests.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>
 
@@ -28,6 +28,7 @@
     <PackageReference Include="FsPickler.Json" Version="5.3.2" />
     <PackageReference Include="Sharpino" Version="1.6.2" />
     <PackageReference Include="Sharpino.Core" Version="1.1.4" />
+    <PackageReference Include="Thoth.Fetch" Version="3.0.1" />
     <PackageReference Include="YoloDev.Expecto.TestSdk" Version="0.*" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
     <PackageReference Include="Farmer" Version="1.8.9" />
@@ -35,5 +36,9 @@
     <PackageReference Include="Log4net" Version="2.0.17" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Update="FSharp.Core" Version="8.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ordersSystemShared\ordersSystemShared.fsproj" />
   </ItemGroup>
 </Project>

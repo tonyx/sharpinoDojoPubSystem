@@ -10,6 +10,7 @@ open Sharpino.Utils
 open PubSystem.Dishes
 open Sharpino.Result
 open Sharpino.Definitions
+open PubSystem.Shared.Definitions
 open FSharpPlus
 open FsToolkit.ErrorHandling
 

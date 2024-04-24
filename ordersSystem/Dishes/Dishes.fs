@@ -7,18 +7,13 @@ open Sharpino.Lib.Core.Commons
 open Sharpino.Utils
 open Sharpino.Result
 open Sharpino.Definitions
+open PubSystem.Shared.Definitions
 open FSharpPlus
 open MBrace.FsPickler.Json
 open FsToolkit.ErrorHandling
 open MBrace.FsPickler.Combinators
 
 module Dishes =
-    type DishTypes =
-        | Starter
-        | Main
-        | Dessert
-        | Drink
-        | Other of string
 
     type Dish (id: Guid, name: string, dishTypes: List<DishTypes>) =
 
@@ -59,6 +54,11 @@ module Dishes =
                     |> Result.ofBool "Name cannot be empty"
                 return Dish (id, newName, dishTypes)
             }
+        member this.ToDishTO  =
+            { Id = id; Name = name; DishTypes = dishTypes }
+
+        static member FromDishTO (dishTO: DishTO) =
+            Dish (dishTO.Id, dishTO.Name, dishTO.DishTypes)
 
         member this.Serialize (serializer: ISerializer) =
             this

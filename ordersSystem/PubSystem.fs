@@ -7,8 +7,6 @@ open PubSystem.KitchenEvents
 open PubSystem.KitchenCommands
 open PubSystem.DishEvents
 open PubSystem.DishCommands
-open PubSystem.KitchenEvents
-open PubSystem.DishEvents
 open PubSystem.IngredientEvents
 open Sharpino
 open Sharpino.Core
@@ -20,6 +18,7 @@ open Sharpino.Definitions
 open FSharpPlus
 open FsToolkit.ErrorHandling
 open Sharpino.MemoryStorage
+open PubSystem.Shared.Definitions
 open Sharpino.Storage
 
 module PubSystem =

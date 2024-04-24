@@ -7,28 +7,13 @@ open Sharpino.Lib.Core.Commons
 open Sharpino.Utils
 open Sharpino.Result
 open Sharpino.Definitions
+open PubSystem.Shared.Definitions
 open FSharpPlus
 open MBrace.FsPickler.Json
 open FsToolkit.ErrorHandling
 open MBrace.FsPickler.Combinators
 
 module Ingredients =
-    type IngredientMeasures =
-        | Grams
-        | Kilograms
-        | Liters
-        | Milliliters
-        | Pieces
-        | Other of string
-
-    type IngredientTypes =
-        | Meat
-        | Fish
-        | Vegetable
-        | Fruit
-        | Dairy
-        | Grain
-        | Other of string
 
     type Ingredient (id: Guid, name: string, ingredientTypes: List<IngredientTypes>, ingredientMeasures: List<IngredientMeasures>) =
 
@@ -85,6 +70,15 @@ module Ingredients =
                     |> Result.ofBool "IngredientMeasure does not exist"
                 return Ingredient (id, name, ingredientTypes, ingredientMeasures |> List.filter ((<>) ingredientMeasure))
             }
+        member this.ToIngredienTO  =
+            {   
+                Id = this.Id; 
+                Name = this.Name; 
+                IngredientTypes = this.IngredientTypes; 
+                IngredientMeasures = this.IngredientMeasures 
+            }
+        static member FromIngredientTO (ingredientTO: IngredientTO) =
+            Ingredient (ingredientTO.Id, ingredientTO.Name, ingredientTO.IngredientTypes, ingredientTO.IngredientMeasures)
 
         static member SnapshotsInterval =
             15

@@ -8,6 +8,7 @@ open Sharpino.Utils
 open Sharpino.Result
 open Sharpino.Definitions
 open MBrace.FsPickler.Json
+open PubSystem.Shared.Definitions
 open FSharpPlus
 open FsToolkit.ErrorHandling
 open PubSystem.Ingredients

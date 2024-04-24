@@ -10,6 +10,7 @@ open FSharpPlus
 open FsToolkit.ErrorHandling
 open PubSystem.Ingredients
 open PubSystem.IngredientEvents
+open PubSystem.Shared.Definitions
 
 module IngredientCommands =
     type IngredientCommands =
