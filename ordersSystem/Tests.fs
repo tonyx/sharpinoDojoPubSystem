@@ -127,6 +127,7 @@ let tests =
 
     multipleTestCase "Add a dish and a dish Type to it" pubSystems <| fun (pubSystem, eventStore, _) ->
         setUp eventStore
+
         let dishguid = Guid.NewGuid()
         let dish = Dish(dishguid, "dish1", [DishTypes.Main])
         let dishType = DishTypes.Dessert
@@ -143,6 +144,7 @@ let tests =
 
     multipleTestCase "Remove a type to a dish - OK" pubSystems <| fun (pubSystem, eventStore, _) ->
         setUp eventStore
+
         let dishguid = Guid.NewGuid()
         let dish = Dish(dishguid, "dish1", [DishTypes.Main; DishTypes.Starter])
         let dishType = DishTypes.Dessert

@@ -55,7 +55,6 @@ module Services =
             AddIngredient: IngredientTO -> Async<Result<unit, string>>
             GetIngredients: unit -> Async<Result<List<IngredientTO>, string>>
             UpdateDishName: Guid * string -> Async<Result<unit, string>>
-            // GetAllIngredients: unit -> Async<Result<List<IngredientTO>, string>>
             AddTypeToIngredient : Guid * IngredientTypes -> Async<Result<unit, string>>
             GetDish: Guid -> Async<Result<DishTO, string>>
             AddTypeToDish : Guid * DishTypes -> Async<Result<unit, string>>
