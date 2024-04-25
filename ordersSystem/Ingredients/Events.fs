@@ -20,6 +20,7 @@ module IngredientEvents =
         | IngredientMeasureAdded  of IngredientMeasures
         | IngredientMeasureRemoved of IngredientMeasures
         | NameUpdated of string
+        | Deactivated 
             interface Event<Ingredient> with
                 member this.Process (ingredient: Ingredient) =
                     match this with
@@ -28,6 +29,7 @@ module IngredientEvents =
                     | NameUpdated newName -> ingredient.UpdateName newName
                     | IngredientMeasureAdded ingredientMeasure -> ingredient.AddIngredientMeasure ingredientMeasure
                     | IngredientMeasureRemoved ingredientMeasure -> ingredient.RemoveIngredientMeasure ingredientMeasure
+                    | Deactivated -> ingredient.Deactivate ()
             static member Deserialize (serializer: ISerializer, json: Json): Result<IngredientEvents, string>  =
                 serializer.Deserialize<IngredientEvents> json
             member this.Serialize (serializer: ISerializer) =

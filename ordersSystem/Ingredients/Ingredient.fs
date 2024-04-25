@@ -8,6 +8,7 @@ open Sharpino.Utils
 open Sharpino.Result
 open Sharpino.Definitions
 open PubSystem.Shared.Definitions
+open Newtonsoft.Json
 open FSharpPlus
 open MBrace.FsPickler.Json
 open FsToolkit.ErrorHandling
@@ -15,13 +16,18 @@ open MBrace.FsPickler.Combinators
 
 module Ingredients =
 
-    type Ingredient (id: Guid, name: string, ingredientTypes: List<IngredientTypes>, ingredientMeasures: List<IngredientMeasures>) =
+    type Ingredient private (id: Guid, name: string, ingredientTypes: List<IngredientTypes>, ingredientMeasures: List<IngredientMeasures>, active: bool) =
 
         let stateId = Guid.NewGuid()
         member this.Id = id
         member this.Name = name
         member this.IngredientTypes = ingredientTypes
         member this.IngredientMeasures = ingredientMeasures
+        member this.Active = active
+
+        [<JsonConstructor>]
+        new (id: Guid, name: string, ingredientTypes: List<IngredientTypes>, ingredientMeasures: List<IngredientMeasures>) =
+            Ingredient (id, name, ingredientTypes, ingredientMeasures, true)
 
         member this.AddIngredientType (ingredientType: IngredientTypes) =
             result {
@@ -51,6 +57,9 @@ module Ingredients =
                     |> Result.ofBool "Name cannot be empty"
                 return Ingredient (id, newName, ingredientTypes, ingredientMeasures)
             }
+
+        member this.Deactivate () =
+            Ingredient (id, name, ingredientTypes, ingredientMeasures, false) |> Ok
 
         member this.AddIngredientMeasure (ingredientMeasure: IngredientMeasures) =
             result {

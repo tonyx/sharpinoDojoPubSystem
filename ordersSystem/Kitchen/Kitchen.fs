@@ -15,14 +15,14 @@ module Kitchen =
         member this.StateId = stateId
         member this.DishRefs = dishRefs
         member this.IngredientRefs = ingredientRefs
-        member this.AddDishRef (digheRef: Guid) =
+        member this.AddDishRef (dishRef: Guid) =
             result {
                 do! 
                     this.DishRefs 
-                    |> List.contains digheRef
+                    |> List.contains dishRef
                     |> not
                     |> Result.ofBool "DigheRef already exists"
-                return Kitchen (digheRef :: dishRefs, ingredientRefs)
+                return Kitchen (dishRef :: dishRefs, ingredientRefs)
             }
         member this.RemoveDishRef (dishRef: Guid) =
             result {

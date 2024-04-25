@@ -19,6 +19,7 @@ module IngredientCommands =
         | UpdateName of string
         | AddIngredientMeasure of IngredientMeasures
         | RemoveIngredientMeasure of IngredientMeasures
+        | Deactivate 
             interface Command<Ingredient, IngredientEvents> with
                 member this.Execute (ingredient: Ingredient) =
                     match this with
@@ -37,4 +38,7 @@ module IngredientCommands =
                     | RemoveIngredientMeasure ingredientMeasure ->
                         ingredient.RemoveIngredientMeasure ingredientMeasure
                         |> Result.map (fun _ -> [IngredientMeasureRemoved ingredientMeasure])
+                    | Deactivate ->
+                        ingredient.Deactivate ()
+                        |> Result.map (fun _ -> [Deactivated])
                 member this.Undoer = None

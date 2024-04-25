@@ -40,8 +40,8 @@ let setUp (eventStore: IEventStore) =
 
 let pubSystems =
     [
-        // PubSystem(memoryEventStore), memoryEventStore, "in memory event store test"
-        PubSystem(pgEventStore), pgEventStore, "postgres eventstore test"
+        PubSystem(memoryEventStore), memoryEventStore, "in memory event store test"
+        // PubSystem(pgEventStore), pgEventStore, "postgres eventstore test"
     ]
 
 [<Tests>]
@@ -59,7 +59,7 @@ let tests =
         setUp eventStore
 
         let dishGuid = Guid.NewGuid()
-        let dish = Dish (dishGuid, "dish1", [DishTypes.Main])
+        let dish = Dish (dishGuid, "dish1", [DishTypes.Main], [])
         let dishAdded = pubSystem.AddDish dish
         Expect.isOk dishAdded "should be ok"
         let dishes = pubSystem.GetDishReferences().OkValue
@@ -69,7 +69,7 @@ let tests =
         setUp eventStore
 
         let dishGuid = Guid.NewGuid()
-        let dish = Dish(dishGuid, "dish1", [DishTypes.Main])
+        let dish = Dish(dishGuid, "dish1", [DishTypes.Main], [])
         let dishAdded = pubSystem.AddDish(dish)
         Expect.isOk dishAdded "should be ok"
 
@@ -82,7 +82,7 @@ let tests =
         setUp eventStore
 
         let dishGuid = Guid.NewGuid()
-        let dish = Dish(dishGuid, "dish1", [DishTypes.Main])
+        let dish = Dish(dishGuid, "dish1", [DishTypes.Main], [])
         let dishAdded = pubSystem.AddDish dish
         Expect.isOk dishAdded "should be ok"
 
@@ -97,8 +97,8 @@ let tests =
 
         let dishGuid1 = Guid.NewGuid()
         let dishGuid2 = Guid.NewGuid()
-        let dish1 = Dish(dishGuid1, "dish1", [DishTypes.Main])
-        let dish2 = Dish(dishGuid2, "dish2", [DishTypes.Main])
+        let dish1 = Dish(dishGuid1, "dish1", [DishTypes.Main], [])
+        let dish2 = Dish(dishGuid2, "dish2", [DishTypes.Main], [])
 
         let dishAdded1 = pubSystem.AddDish dish1
         let dishAdded2 = pubSystem.AddDish dish2
@@ -111,8 +111,8 @@ let tests =
 
         let dishGuid1 = Guid.NewGuid()
         let dishGuid2 = Guid.NewGuid()
-        let dish1 = Dish(dishGuid1, "dish1", [DishTypes.Main])
-        let dish2 = Dish(dishGuid2, "dish2", [DishTypes.Main])
+        let dish1 = Dish(dishGuid1, "dish1", [DishTypes.Main], [])
+        let dish2 = Dish(dishGuid2, "dish2", [DishTypes.Main], [])
         let dishAdded1 = pubSystem.AddDish(dish1)
         let dishAdded2 = pubSystem.AddDish(dish2)
 
@@ -129,7 +129,7 @@ let tests =
         setUp eventStore
 
         let dishguid = Guid.NewGuid()
-        let dish = Dish(dishguid, "dish1", [DishTypes.Main])
+        let dish = Dish(dishguid, "dish1", [DishTypes.Main], [])
         let dishType = DishTypes.Dessert
 
         let dishAdded = pubSystem.AddDish(dish)
@@ -146,7 +146,7 @@ let tests =
         setUp eventStore
 
         let dishguid = Guid.NewGuid()
-        let dish = Dish(dishguid, "dish1", [DishTypes.Main; DishTypes.Starter])
+        let dish = Dish(dishguid, "dish1", [DishTypes.Main; DishTypes.Starter], [])
         let dishType = DishTypes.Dessert
 
         let dishAdded = pubSystem.AddDish(dish)
@@ -163,7 +163,7 @@ let tests =
         setUp eventStore
 
         let dishguid = Guid.NewGuid()
-        let dish = Dish(dishguid, "dish1", [DishTypes.Main])
+        let dish = Dish(dishguid, "dish1", [DishTypes.Main], [])
 
         let dishAdded = pubSystem.AddDish dish
         Expect.isOk dishAdded "should be ok"
@@ -218,6 +218,64 @@ let tests =
         let result = pubSystem.GetIngredient ingredientGuid
         Expect.isOk result "should be ok"
         Expect.equal result.OkValue.IngredientTypes.Length 1 "should have one type"
+
+    multipleTestCase "add an ingredient and then create a dish with that ingredient - Ok" pubSystems <| fun (pubSystem, eventStore, _) ->
+        setUp eventStore
+
+        let ingredientGuid = Guid.NewGuid()
+        let ingredient = Ingredient(ingredientGuid, "ingredient1", [IngredientTypes.Dairy; IngredientTypes.Fish], [IngredientMeasures.Grams])
+        let ingredientAdded = pubSystem.AddIngredient(ingredient)
+        Expect.isOk ingredientAdded "should be ok"
+
+        let dishGuid = Guid.NewGuid()   
+        let newDish = Dish(dishGuid, "dish1", [DishTypes.Main], [ingredientGuid])
+        let added = pubSystem.AddDish newDish
+        Expect.isOk added "should be ok"
+
+        let retrieved = pubSystem.GetDish dishGuid
+        Expect.isOk retrieved "should be ok"
+        
+        let result = retrieved.OkValue
+        Expect.equal result.IngredientRefs.Length 1 "should have one ingredient"
+    
+    multipleTestCase "add an existing ingredient to an existing dishs - Ok" pubSystems <| fun (pubSystem, eventStore, _) ->
+        setUp eventStore
+
+        let ingredientGuid = Guid.NewGuid()
+        let ingredient = Ingredient(ingredientGuid, "ingredient1", [IngredientTypes.Dairy; IngredientTypes.Fish], [IngredientMeasures.Grams])
+        let ingredientAdded = pubSystem.AddIngredient(ingredient)
+        Expect.isOk ingredientAdded "should be ok"
+
+        let dishId = Guid.NewGuid()
+        let dish = Dish(dishId, "dish1", [DishTypes.Main], [])
+
+        let dishAdded = pubSystem.AddDish dish
+        Expect.isOk dishAdded "should be ok"
+
+        let updatedDish = pubSystem.AddIngredientToDish(dishId, ingredientGuid)
+        Expect.isOk updatedDish "should be ok"
+
+        let retrieved = pubSystem.GetDish dishId
+        Expect.isOk retrieved "should be ok"
+
+        let result = retrieved.OkValue
+        let ingredientRefs = result.IngredientRefs
+        Expect.equal ingredientRefs.Length 1 "should have one ingredient"
+        Expect.equal ingredientRefs.[0] ingredientGuid "should have the same ingredient"
+
+    multipleTestCase "add a non existing ingredient to an existing dishs - Error" pubSystems <| fun (pubSystem, eventStore, _) ->
+        setUp eventStore
+
+        let dishId = Guid.NewGuid()
+        let dish = Dish(dishId, "dish1", [DishTypes.Main], [])
+        
+        let dishAdded = pubSystem.AddDish dish
+
+        let updatedDish = pubSystem.AddIngredientToDish(dishId, Guid.NewGuid())
+        Expect.isError updatedDish "should be error"
+    
+
+
 
   ]
   |> testSequenced

@@ -8,19 +8,27 @@ open Sharpino.Utils
 open Sharpino.Result
 open Sharpino.Definitions
 open PubSystem.Shared.Definitions
+open Newtonsoft.Json
 open FSharpPlus
 open MBrace.FsPickler.Json
 open FsToolkit.ErrorHandling
 open MBrace.FsPickler.Combinators
 
 module Dishes =
-
-    type Dish (id: Guid, name: string, dishTypes: List<DishTypes>) =
+    type Dish private (id: Guid, name: string, dishTypes: List<DishTypes>, ingredientRefs: List<Guid>, active: bool) =
 
         let stateId = Guid.NewGuid()
         member this.Id = id
         member this.Name = name
+        member this.IngredientRefs = ingredientRefs
         member this.DishTypes = dishTypes
+
+        member this.Active = active
+
+
+        [<JsonConstructor>]
+        new (id: Guid, name: string, dishTypes: List<DishTypes>, ingredientRefs: List<Guid>) =
+            Dish (id, name, dishTypes, ingredientRefs, true) 
 
         member this.AddDishType (dishType: DishTypes) =
             result {
@@ -29,7 +37,7 @@ module Dishes =
                     |> List.contains dishType
                     |> not
                     |> Result.ofBool "DishType already exists"
-                return Dish (id, name, dishType :: dishTypes)
+                return Dish (id, name, dishType :: dishTypes, this.IngredientRefs)
             }
 
         member this.RemoveDishType (dishType: DishTypes) =
@@ -42,9 +50,11 @@ module Dishes =
                     this.DishTypes 
                     |> List.length > 1
                     |> Result.ofBool "Dish must have at least one type"
-                return Dish (id, name, dishTypes |> List.filter ((<>) dishType))
+                return Dish (id, name, dishTypes |> List.filter ((<>) dishType), this.IngredientRefs)
             }
 
+        member this.Deactivate () =
+            Dish (id, name, dishTypes, ingredientRefs, false) |> Ok
         member this.UpdateName (newName: string) =
             result {
                 do! 
@@ -52,13 +62,30 @@ module Dishes =
                     |> String.IsNullOrWhiteSpace
                     |> not
                     |> Result.ofBool "Name cannot be empty"
-                return Dish (id, newName, dishTypes)
+                return Dish (id, newName, dishTypes, this.IngredientRefs)
+            }
+        member this.AddIngredient (ingredientId: Guid) =
+            result {
+                do! 
+                    this.IngredientRefs 
+                    |> List.contains ingredientId
+                    |> not
+                    |> Result.ofBool "Ingredient already exists"
+                return Dish (id, name, dishTypes, ingredientId :: ingredientRefs)
+            }
+        member this.RemoveIngredient (ingredientId: Guid) =
+            result {
+                do! 
+                    this.IngredientRefs 
+                    |> List.contains ingredientId
+                    |> Result.ofBool "Ingredient does not exist"
+                return Dish (id, name, dishTypes, ingredientRefs |> List.filter ((<>) ingredientId))
             }
         member this.ToDishTO  =
             { Id = id; Name = name; DishTypes = dishTypes }
 
         static member FromDishTO (dishTO: DishTO) =
-            Dish (dishTO.Id, dishTO.Name, dishTO.DishTypes)
+            Dish (dishTO.Id, dishTO.Name, dishTO.DishTypes, [])
 
         member this.Serialize (serializer: ISerializer) =
             this

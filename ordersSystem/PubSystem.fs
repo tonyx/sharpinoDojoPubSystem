@@ -32,8 +32,8 @@ module PubSystem =
     type PubSystem(eventStore: IEventStore) =
         let kitchenStateViewer = getStorageFreshStateViewer<Kitchen, KitchenEvents> eventStore 
         let dishStateViewer = getAggregateStorageFreshStateViewer<Dish, DishEvents> eventStore
-
         let ingredientStateViewer = getAggregateStorageFreshStateViewer<Ingredient, IngredientEvents> eventStore
+
         member this.GetDishReferences() =   
             result {
                 let! (_, state,_, _) = kitchenStateViewer()
@@ -54,6 +54,19 @@ module PubSystem =
                     |> AddIngredientRef
                     |> runInitAndCommand<Kitchen, KitchenEvents, Ingredient> eventStore doNothingBroker kitchenStateViewer ingredient
             }
+        member this.AddIngredientToDish (dishId: Guid, ingredientId: Guid) =
+            result {
+                // you may want to use lock here to prevent ingredient from being deleted while adding it to a dish
+                let! ingredientExists = this.GetIngredient ingredientId 
+
+                // you may want to use the alternative approach by getting the ingredient using the ingredientStateViewer
+                // let! ingredientExists= ingredientStateViewer ingredientId
+                // but that would fail in being able to retrieve an ingredient that existed and was deleted from the kitchen
+                return! 
+                    ingredientId
+                    |> AddIngredient
+                    |> runAggregateCommand<Dish, DishEvents> dishId eventStore doNothingBroker dishStateViewer
+            }
         member this.GetIngredients () =
             result {
                 let! (_, state,_, _) = kitchenStateViewer()
@@ -63,6 +76,9 @@ module PubSystem =
         member this.GetIngredient (ingredientId: Guid) =
             result {
                 let! (_, state,_, _) = ingredientStateViewer ingredientId
+                let! active = 
+                    state.Active 
+                    |> Result.ofBool "Ingredient was deleted"
                 return state
             }
 
@@ -97,6 +113,9 @@ module PubSystem =
         member this.GetDish (dishId: Guid) =
             result {
                 let! (_, state,_, _) = dishStateViewer dishId
+                let! active = 
+                    state.Active 
+                    |> Result.ofBool "Dish was deleted"
                 return state
             }
 

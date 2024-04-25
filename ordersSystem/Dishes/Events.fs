@@ -18,12 +18,18 @@ module DishEvents =
         | DishTypeAdded of DishTypes
         | DishTypeRemoved of DishTypes
         | NameUpdated of string
+        | IngredientAdded of Guid
+        | IngredientRemoved of Guid
+        | Deactivated
             interface Event<Dish> with
                 member this.Process (dish: Dish) =
                     match this with
                     | DishTypeAdded dishType -> dish.AddDishType dishType
                     | DishTypeRemoved dishType -> dish.RemoveDishType dishType
                     | NameUpdated newName -> dish.UpdateName newName
+                    | IngredientAdded ingredientId -> dish.AddIngredient ingredientId
+                    | IngredientRemoved ingredientId -> dish.RemoveIngredient ingredientId
+                    | Deactivated -> dish.Deactivate ()
             static member Deserialize (serializer: ISerializer, json: Json): Result<DishEvents, string>  =
                 serializer.Deserialize<DishEvents> json
             member this.Serialize (serializer: ISerializer) =

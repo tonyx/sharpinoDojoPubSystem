@@ -20,6 +20,9 @@ module DishCommands =
         | AddDishType of DishTypes
         | RemoveDishType of DishTypes
         | UpdateName of string
+        | AddIngredient of Guid
+        | RemoveIngredient of Guid
+        | Deactivate
             interface Command<Dish, DishEvents> with
                 member this.Execute (dish: Dish) =
                     match this with
@@ -32,4 +35,13 @@ module DishCommands =
                     | UpdateName newName ->
                         dish.UpdateName newName
                         |> Result.map (fun _ -> [NameUpdated newName])
+                    | AddIngredient ingredientId ->
+                        dish.AddIngredient ingredientId
+                        |> Result.map (fun _ -> [IngredientAdded ingredientId])
+                    | RemoveIngredient ingredientId ->
+                        dish.RemoveIngredient ingredientId
+                        |> Result.map (fun _ -> [IngredientRemoved ingredientId])
+                    | Deactivate ->
+                        dish.Deactivate ()
+                        |> Result.map (fun _ -> [Deactivated])
                 member this.Undoer = None
