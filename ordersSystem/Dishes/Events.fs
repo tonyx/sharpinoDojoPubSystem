@@ -6,6 +6,7 @@ open PubSystem.Kitchen
 open Sharpino.Core
 open Sharpino.Utils
 open PubSystem.Dishes
+open PubSystem.Commons
 open Sharpino.Result
 open Sharpino.Definitions
 open PubSystem.Shared.Definitions
@@ -30,8 +31,8 @@ module DishEvents =
                     | IngredientAdded ingredientId -> dish.AddIngredient ingredientId
                     | IngredientRemoved ingredientId -> dish.RemoveIngredient ingredientId
                     | Deactivated -> dish.Deactivate ()
-            static member Deserialize (serializer: ISerializer, json: Json): Result<DishEvents, string>  =
-                serializer.Deserialize<DishEvents> json
-            member this.Serialize (serializer: ISerializer) =
+            static member Deserialize  (json: Json): Result<DishEvents, string>  =
+                globalSerializer.Deserialize<DishEvents> json
+            member this.Serialize  =
                 this
-                |> serializer.Serialize
+                |> globalSerializer.Serialize

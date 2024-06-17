@@ -22,6 +22,8 @@ open Sharpino.TestUtils
 open MBrace.FsPickler.Json
 open PubSystem.Ingredients
 open PubSystem.Shared.Definitions
+open Sharpino.KafkaBroker
+open Sharpino
 
 let connection =
     "Server=127.0.0.1;" +
@@ -30,18 +32,31 @@ let connection =
     "Password=safe;"
 
 // let pgEventStore = PgEventStore(connection)
-let memoryEventStore:IEventStore = MemoryStorage()
-let pgEventStore:IEventStore = PgEventStore(connection)
+let memoryEventStore:IEventStore<string> = MemoryStorage()
+let pgEventStore:IEventStore<string> = PgEventStore(connection)
 
-let setUp (eventStore: IEventStore) =
+let doNothingBroker: IEventBroker<_> =
+    {
+        notify = None
+        notifyAggregate = None
+    }
+
+let standardBroker = getKafkaBroker("localhost:9092")
+
+let setUp (eventStore: IEventStore<string>) =
     eventStore.Reset Kitchen.Version Kitchen.StorageName
     eventStore.Reset Dish.Version Dish.StorageName
     eventStore.ResetAggregateStream Dish.Version Dish.StorageName
+    eventStore.Reset Ingredient.Version Ingredient.StorageName
+    eventStore.ResetAggregateStream Ingredient.Version Ingredient.StorageName
+    Sharpino.Cache.StateCache<Kitchen>.Instance.Clear()
+    Sharpino.Cache.AggregateCache<Dish, string>.Instance.Clear()
+    Sharpino.Cache.AggregateCache<Ingredient, string>.Instance.Clear()
 
 let pubSystems =
     [
-        PubSystem(memoryEventStore), memoryEventStore, "in memory event store test"
-        // PubSystem(pgEventStore), pgEventStore, "postgres eventstore test"
+        // PubSystem(memoryEventStore), memoryEventStore, "in memory event store test"
+        PubSystem(pgEventStore, doNothingBroker), pgEventStore, "postgres eventstore test"
     ]
 
 [<Tests>]
@@ -263,6 +278,21 @@ let tests =
         Expect.equal ingredientRefs.Length 1 "should have one ingredient"
         Expect.equal ingredientRefs.[0] ingredientGuid "should have the same ingredient"
 
+    multipleTestCase "add and remove a dish - Ok" pubSystems <| fun (pubSystem, eventStore, _) ->
+        setUp eventStore
+
+        let dishGuid = Guid.NewGuid()
+        let dish = Dish(dishGuid, "dish1", [DishTypes.Main], [])
+        let dishAdded = pubSystem.AddDish dish
+        Expect.isOk dishAdded "should be ok"
+
+        let removed = pubSystem.RemoveDish dishGuid
+        Expect.isOk removed "should be ok"
+
+        let retrieved = pubSystem.GetDish dishGuid
+        Expect.isError retrieved "should be error"
+
+
     multipleTestCase "add a non existing ingredient to an existing dishs - Error" pubSystems <| fun (pubSystem, eventStore, _) ->
         setUp eventStore
 
@@ -273,9 +303,6 @@ let tests =
 
         let updatedDish = pubSystem.AddIngredientToDish(dishId, Guid.NewGuid())
         Expect.isError updatedDish "should be error"
-    
-
-
 
   ]
   |> testSequenced

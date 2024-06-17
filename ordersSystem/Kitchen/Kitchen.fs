@@ -5,6 +5,7 @@ open Sharpino.Core
 open Sharpino.Utils
 open Sharpino.Result
 open Sharpino.Definitions
+open PubSystem.Commons
 open FSharpPlus
 open MBrace.FsPickler.Json
 open FsToolkit.ErrorHandling
@@ -29,7 +30,7 @@ module Kitchen =
                 do! 
                     this.DishRefs 
                     |> List.contains dishRef
-                    |> Result.ofBool "DigheRef does not exist"
+                    |> Result.ofBool "DishRef does not exist"
                 return Kitchen (this.DishRefs |> List.filter ((<>) dishRef), ingredientRefs)
             }
         member this.AddIngredientRef (ingredientRef: Guid) =
@@ -61,14 +62,11 @@ module Kitchen =
             "_01"
         static member SnapshotsInterval =
             15
-        static member Lock =
-            new Object()
-        static member Deserialize (serializer: ISerializer, json: Json): Result<Kitchen, string>  =
-            serializer.Deserialize<Kitchen> json
+        static member Deserialize  (json: Json): Result<Kitchen, string>  =
+            globalSerializer.Deserialize<Kitchen> json  
 
-        member this.Serialize (serializer: ISerializer) =
-            this
-            |> serializer.Serialize
+        member this.Serialize  =
+            this |> globalSerializer.Serialize
 
 
 

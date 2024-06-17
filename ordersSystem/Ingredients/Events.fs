@@ -9,6 +9,7 @@ open Sharpino.Result
 open Sharpino.Definitions
 open MBrace.FsPickler.Json
 open PubSystem.Shared.Definitions
+open PubSystem.Commons
 open FSharpPlus
 open FsToolkit.ErrorHandling
 open PubSystem.Ingredients
@@ -30,9 +31,8 @@ module IngredientEvents =
                     | IngredientMeasureAdded ingredientMeasure -> ingredient.AddIngredientMeasure ingredientMeasure
                     | IngredientMeasureRemoved ingredientMeasure -> ingredient.RemoveIngredientMeasure ingredientMeasure
                     | Deactivated -> ingredient.Deactivate ()
-            static member Deserialize (serializer: ISerializer, json: Json): Result<IngredientEvents, string>  =
-                serializer.Deserialize<IngredientEvents> json
-            member this.Serialize (serializer: ISerializer) =
-                this
-                |> serializer.Serialize
+            static member Deserialize (json: Json): Result<IngredientEvents, string>  =
+                globalSerializer.Deserialize<IngredientEvents> json
+            member this.Serialize  =
+                this |> globalSerializer.Serialize
 

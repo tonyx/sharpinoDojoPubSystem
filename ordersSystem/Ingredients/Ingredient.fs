@@ -8,6 +8,7 @@ open Sharpino.Utils
 open Sharpino.Result
 open Sharpino.Definitions
 open PubSystem.Shared.Definitions
+open PubSystem.Commons
 open Newtonsoft.Json
 open FSharpPlus
 open MBrace.FsPickler.Json
@@ -18,14 +19,12 @@ module Ingredients =
 
     type Ingredient private (id: Guid, name: string, ingredientTypes: List<IngredientTypes>, ingredientMeasures: List<IngredientMeasures>, active: bool) =
 
-        let stateId = Guid.NewGuid()
         member this.Id = id
         member this.Name = name
         member this.IngredientTypes = ingredientTypes
         member this.IngredientMeasures = ingredientMeasures
         member this.Active = active
 
-        [<JsonConstructor>]
         new (id: Guid, name: string, ingredientTypes: List<IngredientTypes>, ingredientMeasures: List<IngredientMeasures>) =
             Ingredient (id, name, ingredientTypes, ingredientMeasures, true)
 
@@ -96,20 +95,17 @@ module Ingredients =
         static member Version =
             "_01"
 
-        member this.Serialize (serializer: ISerializer) =
-            this
-            |> serializer.Serialize
+        member this.Serialize = 
+            this |> globalSerializer.Serialize
 
-        static member Deserialize (serializer: ISerializer, json: Json): Result<Ingredient, string>  =
-            serializer.Deserialize<Ingredient> json
+        static member Deserialize (json: Json): Result<Ingredient, string>  =
+            globalSerializer.Deserialize<Ingredient> json
 
-        interface Aggregate with
+        interface Aggregate<string> with
             member this.Id = id
-            member this.Serialize (serializer: ISerializer)= 
-                this.Serialize serializer
+            member this.Serialize = 
+                this.Serialize
 
-            member this.Lock = this
-            member this.StateId = stateId
 
         interface Entity with
             member this.Id = this.Id

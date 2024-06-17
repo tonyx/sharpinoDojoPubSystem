@@ -8,6 +8,7 @@ open Sharpino.Utils
 open Sharpino.Result
 open Sharpino.Definitions
 open PubSystem.Shared.Definitions
+open PubSystem.Commons
 open Newtonsoft.Json
 open FSharpPlus
 open MBrace.FsPickler.Json
@@ -17,7 +18,6 @@ open MBrace.FsPickler.Combinators
 module Dishes =
     type Dish private (id: Guid, name: string, dishTypes: List<DishTypes>, ingredientRefs: List<Guid>, active: bool) =
 
-        let stateId = Guid.NewGuid()
         member this.Id = id
         member this.Name = name
         member this.IngredientRefs = ingredientRefs
@@ -26,7 +26,6 @@ module Dishes =
         member this.Active = active
 
 
-        [<JsonConstructor>]
         new (id: Guid, name: string, dishTypes: List<DishTypes>, ingredientRefs: List<Guid>) =
             Dish (id, name, dishTypes, ingredientRefs, true) 
 
@@ -87,9 +86,8 @@ module Dishes =
         static member FromDishTO (dishTO: DishTO) =
             Dish (dishTO.Id, dishTO.Name, dishTO.DishTypes, [])
 
-        member this.Serialize (serializer: ISerializer) =
-            this
-            |> serializer.Serialize
+        member this.Serialize =
+            this |> globalSerializer.Serialize
 
         static member SnapshotsInterval =
             15
@@ -98,15 +96,13 @@ module Dishes =
         static member Version =
             "_01"
 
-        static member Deserialize (serializer: ISerializer, json: Json): Result<Dish, string>  =
-            serializer.Deserialize<Dish> json
+        static member Deserialize x: Result<Dish, string>  =
+            globalSerializer.Deserialize<Dish> x
 
-        interface Aggregate with
+        interface Aggregate<string> with
             member this.Id = id
-            member this.Serialize (serializer: ISerializer) =
-                this.Serialize serializer
-            member this.Lock = this
-            member this.StateId = stateId 
+            member this.Serialize =
+                this.Serialize
         
         interface Entity with
             member this.Id = this.Id 

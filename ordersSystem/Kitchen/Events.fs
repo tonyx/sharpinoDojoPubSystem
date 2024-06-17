@@ -2,7 +2,9 @@
 namespace PubSystem
 open System
 open PubSystem.Kitchen
+open PubSystem.Commons
 open Sharpino
+
 open Sharpino.Core
 open Sharpino.Utils
 open Sharpino.Result
@@ -27,8 +29,8 @@ module KitchenEvents =
                         kitchen.AddIngredientRef ingredientRef
                     | IngredientRefRemoved ingredientRef ->
                         kitchen.RemoveIngredientRef ingredientRef
-            static member Deserialize (serializer: ISerializer, json: Json): Result<KitchenEvents, string>  =
-                serializer.Deserialize<KitchenEvents> json
-            member this.Serialize (serializer: ISerializer) =
+            static member Deserialize (json: Json): Result<KitchenEvents, string>  =
+                globalSerializer.Deserialize<KitchenEvents> json
+            member this.Serialize  =
                 this
-                |> serializer.Serialize
+                |> globalSerializer.Serialize

@@ -23,20 +23,24 @@ open Sharpino.Storage
 
 module PubSystem =
     open Ingredients
-    let doNothingBroker: IEventBroker =
+    let doNothingBroker: IEventBroker<_> =
         {
             notify = None
             notifyAggregate = None
         }
 
-    type PubSystem(eventStore: IEventStore) =
-        let kitchenStateViewer = getStorageFreshStateViewer<Kitchen, KitchenEvents> eventStore 
-        let dishStateViewer = getAggregateStorageFreshStateViewer<Dish, DishEvents> eventStore
-        let ingredientStateViewer = getAggregateStorageFreshStateViewer<Ingredient, IngredientEvents> eventStore
+
+    type PubSystem(eventStore: IEventStore<string>, eventBroker: IEventBroker<string>) =
+        let kitchenStateViewer = getStorageFreshStateViewer<Kitchen, KitchenEvents, string> eventStore 
+        let dishStateViewer = getAggregateStorageFreshStateViewer<Dish, DishEvents, string> eventStore
+        let ingredientStateViewer = getAggregateStorageFreshStateViewer<Ingredient, IngredientEvents, string> eventStore
+
+        new (eventStore: IEventStore<string>) =
+            new PubSystem(eventStore, doNothingBroker)
 
         member this.GetDishReferences() =   
             result {
-                let! (_, state,_, _) = kitchenStateViewer()
+                let! (_, state) = kitchenStateViewer()
                 return state.DishRefs
             }
         member this.AddDish (dish: Dish) =
@@ -44,7 +48,20 @@ module PubSystem =
                 return! 
                     dish.Id
                     |> AddDishRef
-                    |> runInitAndCommand<Kitchen, KitchenEvents, Dish> eventStore doNothingBroker kitchenStateViewer dish
+                    |> runInitAndCommand<Kitchen, KitchenEvents, Dish, string> eventStore eventBroker dish
+            }
+
+        member this.RemoveDish (dishId: Guid) =
+            result {
+                let deactivateDish = 
+                    DishCommands.Deactivate
+                let! deactivated =
+                    deactivateDish
+                    |> runAggregateCommand<Dish, DishEvents, string> dishId eventStore eventBroker 
+                return! 
+                    dishId
+                    |> RemoveDishRef
+                    |> runCommand<Kitchen, KitchenEvents, string> eventStore eventBroker 
             }
 
         member this.AddIngredient (ingredient: Ingredient) =
@@ -52,7 +69,7 @@ module PubSystem =
                 return! 
                     ingredient.Id
                     |> AddIngredientRef
-                    |> runInitAndCommand<Kitchen, KitchenEvents, Ingredient> eventStore doNothingBroker kitchenStateViewer ingredient
+                    |> runInitAndCommand<Kitchen, KitchenEvents, Ingredient, string> eventStore eventBroker ingredient
             }
         member this.AddIngredientToDish (dishId: Guid, ingredientId: Guid) =
             result {
@@ -65,17 +82,18 @@ module PubSystem =
                 return! 
                     ingredientId
                     |> AddIngredient
-                    |> runAggregateCommand<Dish, DishEvents> dishId eventStore doNothingBroker dishStateViewer
+                    |> runAggregateCommand<Dish, DishEvents, string> dishId eventStore eventBroker
             }
+
         member this.GetIngredients () =
             result {
-                let! (_, state,_, _) = kitchenStateViewer()
+                let! (_, state) = kitchenStateViewer()
                 return state.IngredientRefs
             }
 
         member this.GetIngredient (ingredientId: Guid) =
             result {
-                let! (_, state,_, _) = ingredientStateViewer ingredientId
+                let! (_, state) = ingredientStateViewer ingredientId
                 let! active = 
                     state.Active 
                     |> Result.ofBool "Ingredient was deleted"
@@ -87,12 +105,12 @@ module PubSystem =
                 return! 
                     newName
                     |> UpdateName
-                    |> runAggregateCommand<Dish, DishEvents> dishId eventStore doNothingBroker dishStateViewer
+                    |> runAggregateCommand<Dish, DishEvents, string> dishId eventStore eventBroker 
             }
         
         member this.GetAllIngredientRefs () =
             result {
-                let! (_, state,_, _) = kitchenStateViewer()
+                let! (_, state) = kitchenStateViewer()
                 return state.IngredientRefs
             }
         member this.GetAllIngredients () =
@@ -107,12 +125,12 @@ module PubSystem =
                 return! 
                     ingredientType
                     |> IngredientCommands.AddIngredientType
-                    |> runAggregateCommand<Ingredient, IngredientEvents> ingredientId eventStore doNothingBroker ingredientStateViewer
+                    |> runAggregateCommand<Ingredient, IngredientEvents, string> ingredientId eventStore eventBroker
             }
 
         member this.GetDish (dishId: Guid) =
             result {
-                let! (_, state,_, _) = dishStateViewer dishId
+                let! (_, state) = dishStateViewer dishId
                 let! active = 
                     state.Active 
                     |> Result.ofBool "Dish was deleted"
@@ -121,7 +139,7 @@ module PubSystem =
 
         member this.GetDishRefs () =
             result {
-                let! (_, state,_ , _) = kitchenStateViewer()
+                let! (_, state) = kitchenStateViewer()
                 return state.GetDishRefs()
             }
 
@@ -130,7 +148,7 @@ module PubSystem =
                 return! 
                     dishTypes
                     |> AddDishType
-                    |> runAggregateCommand<Dish, DishEvents> dishId eventStore doNothingBroker dishStateViewer
+                    |> runAggregateCommand<Dish, DishEvents, string> dishId eventStore eventBroker
             }
 
         member this.RemoveTypeFromDish (dishId: Guid, dishTypes: DishTypes) =
@@ -138,14 +156,14 @@ module PubSystem =
                 return! 
                     dishTypes
                     |> RemoveDishType
-                    |> runAggregateCommand<Dish, DishEvents> dishId eventStore doNothingBroker dishStateViewer
+                    |> runAggregateCommand<Dish, DishEvents, string> dishId eventStore eventBroker
             }
         member this.RemoveTypeFromIngredient (ingredientId: Guid, ingredientType: IngredientTypes) =
             result {
                 return! 
                     ingredientType
                     |> IngredientCommands.RemoveIngredientType
-                    |> runAggregateCommand<Ingredient, IngredientEvents> ingredientId eventStore doNothingBroker ingredientStateViewer
+                    |> runAggregateCommand<Ingredient, IngredientEvents, string> ingredientId eventStore eventBroker
             }
 
         member this.GetDishes () =
