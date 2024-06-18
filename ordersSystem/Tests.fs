@@ -56,7 +56,7 @@ let setUp (eventStore: IEventStore<string>) =
 let pubSystems =
     [
         // PubSystem(memoryEventStore), memoryEventStore, "in memory event store test"
-        PubSystem(pgEventStore, standardBroker), pgEventStore, "postgres eventstore test"
+        PubSystem(pgEventStore, doNothingBroker), pgEventStore, "postgres eventstore test"
     ]
 
 [<Tests>]
