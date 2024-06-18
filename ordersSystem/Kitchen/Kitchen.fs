@@ -20,7 +20,7 @@ module Kitchen =
                     this.DishRefs 
                     |> List.contains dishRef
                     |> not
-                    |> Result.ofBool "DigheRef already exists"
+                    |> Result.ofBool "DishRef already exists"
                 return Kitchen (dishRef :: dishRefs, ingredientRefs)
             }
         member this.RemoveDishRef (dishRef: Guid) =
