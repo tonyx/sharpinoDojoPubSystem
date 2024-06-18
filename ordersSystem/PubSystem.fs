@@ -58,11 +58,14 @@ module PubSystem =
                 let! deactivated =
                     deactivateDish
                     |> runAggregateCommand<Dish, DishEvents, string> dishId eventStore eventBroker 
-                return! 
+                let result =
                     dishId
                     |> RemoveDishRef
                     |> runCommand<Kitchen, KitchenEvents, string> eventStore eventBroker 
+
+                return! result
             }
+
 
         member this.AddIngredient (ingredient: Ingredient) =
             result {

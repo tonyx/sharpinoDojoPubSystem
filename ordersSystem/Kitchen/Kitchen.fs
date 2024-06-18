@@ -11,9 +11,7 @@ open MBrace.FsPickler.Json
 open FsToolkit.ErrorHandling
 module Kitchen =
     type Kitchen(dishRefs: List<Guid>, ingredientRefs: List<Guid> ) =
-        let stateId = Guid.NewGuid()
 
-        member this.StateId = stateId
         member this.DishRefs = dishRefs
         member this.IngredientRefs = ingredientRefs
         member this.AddDishRef (dishRef: Guid) =
